@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Points Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #6e8efb, #a777e3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .progress-container {
+            background-color: #111;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .progress-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background-color: #222;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6e8efb, #a777e3);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(174, 109, 250, 0.5);
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .task-widget {
+            background-color: #111;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+            transform: scale(1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-widget:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+            border-color: #555;
+        }
+
+        .task-widget::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .task-widget:hover::before {
+            top: 100%;
+            left: 100%;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .task-points {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: #222;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .positive {
+            color: #6e8efb;
+        }
+
+        .negative {
+            color: #ff5e5e;
+        }
+
+        .task-notes {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            height: 40px;
+        }
+
+        .task-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .btn-check {
+            background-color: #222;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .btn-check:hover {
+            background: linear-gradient(90deg, #6e8efb, #a777e3);
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(174, 109, 250, 0.5);
+        }
+
+        .btn-check.completed {
+            background: linear-gradient(90deg, #6e8efb, #a777e3);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .help-input {
+            width: 60px;
+            padding: 8px;
+            background-color: #222;
+            border: 2px solid #333;
+            border-radius: 5px;
+            margin-right: 10px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .help-input:focus {
+            outline: none;
+            border-color: #6e8efb;
+            box-shadow: 0 0 10px rgba(174, 109, 250, 0.5);
+        }
+
+        .btn-small {
+            flex: 1;
+        }
+
+        .reset-section {
+            text-align: center;
+            margin-top: 30px;
+            background-color: #111;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 4px 20px rgba(110, 142, 251, 0.3); }
+            100% { box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        }
+
+        .btn-reset {
+            background-color: #222;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(90deg, #6e8efb, #a777e3);
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(174, 109, 250, 0.5);
+        }
+
+        .daily-reset {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 20px 0;
+            border-top: 1px solid #333;
+        }
+
+        /* Animation for task completion */
+        @keyframes complete {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .task-complete-animation {
+            animation: complete 0.5s ease-out;
+        }
+
+        /* Pulsing effect for new points */
+        @keyframes point-pulse {
+            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+            50% { opacity: 1; transform: scale(1.2) translateY(-20px); }
+            100% { opacity: 0; transform: scale(1.5) translateY(-40px); }
+        }
+
+        .point-indicator {
+            position: absolute;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .point-indicator.positive {
+            color: #6e8efb;
+        }
+
+        .point-indicator.negative {
+            color: #ff5e5e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Points Tracker</h1>
+            <p>Track daily activities and reach your 9000-point goal</p>
+        </header>
+
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Progress: <span id="current-points">0</span> / 9000 points</span>
+                <span><span id="percentage">0</span>% completed</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="tasks-grid">
+            <div class="task-widget" id="widget-school">
+                <div class="task-title">School Attendance</div>
+                <div class="task-points positive">+10 Points</div>
+                <div class="task-notes">Full daily attendance (7 AM - 3 PM)</div>
+                <div class="task-action">
+                    <button class="btn-check" id="school">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-tuition">
+                <div class="task-title">Tuition Classes</div>
+                <div class="task-points positive">+5 Points</div>
+                <div class="task-notes">Mon/Wed/Sat, 4-6 PM</div>
+                <div class="task-action">
+                    <button class="btn-check" id="tuition">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-maths">
+                <div class="task-title">Maths Study</div>
+                <div class="task-points positive">+8 Points</div>
+                <div class="task-notes">1 hour daily practice</div>
+                <div class="task-action">
+                    <button class="btn-check" id="maths">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-science-sst">
+                <div class="task-title">Science/SST Study</div>
+                <div class="task-points positive">+8 Points</div>
+                <div class="task-notes">Science: M/W/F; SST: T/Th/Sat</div>
+                <div class="task-action">
+                    <button class="btn-check" id="science-sst">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-english-sanskrit">
+                <div class="task-title">English/Sanskrit</div>
+                <div class="task-points positive">+8 Points</div>
+                <div class="task-notes">English: M/W/F; Sanskrit: T/Th/Sat</div>
+                <div class="task-action">
+                    <button class="btn-check" id="english-sanskrit">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-homework">
+                <div class="task-title">Homework Completion</div>
+                <div class="task-points positive">+5 Points</div>
+                <div class="task-notes">All daily assignments finished</div>
+                <div class="task-action">
+                    <button class="btn-check" id="homework">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-reading">
+                <div class="task-title">Reading Time</div>
+                <div class="task-points positive">+5 Points</div>
+                <div class="task-notes">30 mins of focused reading</div>
+                <div class="task-action">
+                    <button class="btn-check" id="reading">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-coding">
+                <div class="task-title">Coding Practice</div>
+                <div class="task-points positive">+6 Points</div>
+                <div class="task-notes">1 hour structured coding session</div>
+                <div class="task-action">
+                    <button class="btn-check" id="coding">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-sleep">
+                <div class="task-title">Early Sleep</div>
+                <div class="task-points positive">+5 Points</div>
+                <div class="task-notes">Sleep before 11:30 PM</div>
+                <div class="task-action">
+                    <button class="btn-check" id="sleep">Not Done</button>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-helping">
+                <div class="task-title">Helping at Home</div>
+                <div class="task-points positive">+2 Points per task</div>
+                <div class="task-notes">Chores or assisting family</div>
+                <div class="task-action">
+                    <div class="input-container">
+                        <input type="number" class="help-input" id="help-input" min="0" value="0">
+                        <button class="btn-check btn-small" id="helping">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-widget" id="widget-wasting">
+                <div class="task-title">Wasting Time</div>
+                <div class="task-points negative">-5 Points per hour</div>
+                <div class="task-notes">Non-productive activities</div>
+                <div class="task-action">
+                    <div class="input-container">
+                        <input type="number" class="help-input" id="waste-input" min="0" value="0">
+                        <button class="btn-check btn-small" id="wasting">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reset-section">
+            <button class="btn-reset" id="reset-day">Reset Daily Activities</button>
+            <div class="daily-reset">Last reset: <span id="last-reset">Never</span></div>
+        </div>
+
+        <div class="footer">
+            <p>Keep tracking your progress daily to reach your goal of 9000 points!</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize points from localStorage or set to 0
+        let totalPoints = parseInt(localStorage.getItem('totalPoints')) || 0;
+
+        // Initialize activity states
+        const activities = {
+            'school': { points: 10, completed: false },
+            'tuition': { points: 5, completed: false },
+            'maths': { points: 8, completed: false },
+            'science-sst': { points: 8, completed: false },
+            'english-sanskrit': { points: 8, completed: false },
+            'homework': { points: 5, completed: false },
+            'reading': { points: 5, completed: false },
+            'coding': { points: 6, completed: false },
+            'sleep': { points: 5, completed: false }
+        };
+
+        // Create point indicator element
+        function createPointIndicator(element, points) {
+            const indicator = document.createElement('div');
+            indicator.className = `point-indicator ${points >= 0 ? 'positive' : 'negative'}`;
+            indicator.textContent = points >= 0 ? `+${points}` : points;
+
+            // Position it relative to the clicked element
+            const rect = element.getBoundingClientRect();
+            indicator.style.position = 'absolute';
+            indicator.style.left = `${rect.left + rect.width / 2}px`;
+            indicator.style.top = `${rect.top + rect.height / 2}px`;
+
+            // Add animation
+            indicator.style.animation = 'point-pulse 1s forwards';
+
+            document.body.appendChild(indicator);
+
+            // Remove after animation
+            setTimeout(() => {
+                document.body.removeChild(indicator);
+            }, 1000);
+        }
+
+        // Add animation to task widget
+        function animateWidget(id) {
+            const widget = document.getElementById(`widget-${id}`);
+            widget.classList.add('task-complete-animation');
+            setTimeout(() => {
+                widget.classList.remove('task-complete-animation');
+            }, 500);
+        }
+
+        // Load saved state from localStorage
+        function loadSavedState() {
+            Object.keys(activities).forEach(key => {
+                const saved = localStorage.getItem(`activity_${key}`);
+                if (saved === 'true') {
+                    activities[key].completed = true;
+                    document.getElementById(key).classList.add('completed');
+                    document.getElementById(key).textContent = 'Done';
+                }
+            });
+
+            const lastReset = localStorage.getItem('lastReset');
+            if (lastReset) {
+                document.getElementById('last-reset').textContent = new Date(parseInt(lastReset)).toLocaleDateString();
+            }
+
+            updateProgress();
+        }
+
+        // Update progress bar and points display
+        function updateProgress() {
+            const percentage = Math.min(Math.floor((totalPoints / 9000) * 100), 100);
+            document.getElementById('current-points').textContent = totalPoints;
+            document.getElementById('percentage').textContent = percentage;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+            // Save to localStorage
+            localStorage.setItem('totalPoints', totalPoints);
+        }
+
+        // Toggle activity completion
+        function toggleActivity(id) {
+            const activity = activities[id];
+            const button = document.getElementById(id);
+
+            if (!activity.completed) {
+                activity.completed = true;
+                totalPoints += activity.points;
+                button.classList.add('completed');
+                button.textContent = 'Done';
+                createPointIndicator(button, activity.points);
+                animateWidget(id);
+            } else {
+                activity.completed = false;
+                totalPoints -= activity.points;
+                button.classList.remove('completed');
+                button.textContent = 'Not Done';
+                createPointIndicator(button, -activity.points);
+                animateWidget(id);
+            }
+
+            // Save state to localStorage
+            localStorage.setItem(`activity_${id}`, activity.completed);
+            updateProgress();
+        }
+
+        // Handle helping at home (multiple tasks)
+        function handleHelping() {
+            const input = document.getElementById('help-input');
+            const button = document.getElementById('helping');
+            const taskCount = parseInt(input.value) || 0;
+
+            if (taskCount > 0) {
+                const points = taskCount * 2;
+                totalPoints += points;
+                createPointIndicator(button, points);
+                animateWidget('helping');
+                input.value = 0;
+                updateProgress();
+            }
+        }
+
+        // Handle wasting time (multiple hours)
+        function handleWasting() {
+            const input = document.getElementById('waste-input');
+            const button = document.getElementById('wasting');
+            const hours = parseInt(input.value) || 0;
+
+            if (hours > 0) {
+                const points = hours * -5;
+                totalPoints += points;
+                createPointIndicator(button, points);
+                animateWidget('wasting');
+                input.value = 0;
+                updateProgress();
+            }
+        }
+
+        // Reset daily activities
+        function resetDay() {
+            if (confirm('Are you sure you want to reset all daily activities?')) {
+                Object.keys(activities).forEach(key => {
+                    if (activities[key].completed) {
+                        totalPoints -= activities[key].points;
+                        activities[key].completed = false;
+                        localStorage.setItem(`activity_${key}`, false);
+                        document.getElementById(key).classList.remove('completed');
+                        document.getElementById(key).textContent = 'Not Done';
+                    }
+                });
+
+                const now = new Date();
+                localStorage.setItem('lastReset', now.getTime());
+                document.getElementById('last-reset').textContent = now.toLocaleDateString();
+
+                updateProgress();
+
+                // Animate reset button
+                const resetBtn = document.getElementById('reset-day');
+                resetBtn.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    resetBtn.style.transform = 'scale(1)';
+                }, 300);
+            }
+        }
+
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved state
+            loadSavedState();
+
+            // Add click handlers for activity buttons
+            Object.keys(activities).forEach(key => {
+                document.getElementById(key).addEventListener('click', () => toggleActivity(key));
+            });
+
+            // Add handlers for special cases
+            document.getElementById('helping').addEventListener('click', handleHelping);
+            document.getElementById('wasting').addEventListener('click', handleWasting);
+            document.getElementById('reset-day').addEventListener('click', resetDay);
+        });
+    </script>
+</body>
+</html>
